@@ -45,3 +45,9 @@ vitest-results/
 *.out
 vendor/
 
+# Turbo cache
+.turbo/cache/
+
+# Serena local cache (keep project.yml)
+.serena/cache/
+
