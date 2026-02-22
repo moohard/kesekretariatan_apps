@@ -51,3 +51,6 @@ vendor/
 # Serena local cache (keep project.yml)
 .serena/cache/
 
+# Claude Octopus plugin state
+.claude-octopus/
+
