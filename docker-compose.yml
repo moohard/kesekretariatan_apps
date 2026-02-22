@@ -1,0 +1,190 @@
+# Docker Compose untuk Development SIKERMA
+# Menjalankan PostgreSQL (data), Keycloak (auth), DragonflyDB (cache), dan Gotenberg (PDF generation)
+# Backend dan Frontend dijalankan manual untuk kemudahan development
+#
+# 🔐 SECURITY: Menggunakan Docker Secrets untuk credentials
+#    Jalankan: ./docker/secrets/generate-secrets.sh untuk generate secrets
+
+services:
+  # ============================================
+  # Database untuk aplikasi SIKERMA
+  # ============================================
+  db:
+    image: postgres:18-alpine
+    container_name: sikerma_db
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_password
+      POSTGRES_DB: postgres
+    secrets:
+      - db_user
+      - db_password
+    volumes:
+      - sikerma_postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sikerma-network
+
+  # ============================================
+  # Database untuk Keycloak
+  # ============================================
+  postgres-keycloak:
+    image: postgres:18-alpine
+    container_name: keycloak_db
+    environment:
+      POSTGRES_USER_FILE: /run/secrets/keycloak_db_user
+      POSTGRES_PASSWORD_FILE: /run/secrets/keycloak_db_password
+      POSTGRES_DB: keycloak
+    secrets:
+      - keycloak_db_user
+      - keycloak_db_password
+    volumes:
+      - keycloak_postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sikerma-network
+
+  # ============================================
+  # Keycloak untuk SSO/OIDC
+  # ============================================
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.5.3
+    container_name: sikerma_keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-keycloak:5432/keycloak
+      KC_DB_USERNAME: /run/secrets/keycloak_db_user
+      KC_DB_PASSWORD: /run/secrets/keycloak_db_password
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD_FILE: /run/secrets/keycloak_admin_password
+      KC_HOSTNAME: http://localhost:8081
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+      KC_HTTP_PORT: 8080
+      KC_METRICS_ENABLED: "true"
+      KC_HEALTH_ENABLED: "true"
+      # Token settings (sesuai PRD Section 13.2)
+      KC_SPI_ACCESS_TOKEN_LIFESPAN: "900"
+    secrets:
+      - keycloak_db_user
+      - keycloak_db_password
+      - keycloak_admin_password
+    ports:
+      - "8081:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    command: start-dev
+    depends_on:
+      postgres-keycloak:
+        condition: service_healthy
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json:ro
+    networks:
+      - sikerma-network
+
+  # ============================================
+  # DragonflyDB - High-performance Redis replacement
+  # ============================================
+  dragonfly:
+    image: docker.dragonflydb.io/dragonflydb/dragonfly:v1.36.0
+    container_name: sikerma_dragonfly
+    ports:
+      - "6379:6379"
+    environment:
+      DFLY_PASSWORD_FILE: /run/secrets/dragonfly_password
+    secrets:
+      - dragonfly_password
+    volumes:
+      - dragonfly_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "$$(cat /run/secrets/dragonfly_password)", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    command: ["--logtostderr", "--requirepassfile", "/run/secrets/dragonfly_password"]
+    networks:
+      - sikerma-network
+
+  # ============================================
+  # Gotenberg untuk PDF generation
+  # ============================================
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    container_name: sikerma_gotenberg
+    ports:
+      - "3100:3000"
+    environment:
+      CHROMIUM_SKIP_DOWNLOAD: "true"
+      GOTENBERG_API_ALLOW_ORIGINS: "http://localhost:3000,http://localhost:3001,http://localhost:3002,http://localhost:3003"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - sikerma-network
+
+# ============================================
+# Docker Secrets Definition
+# ============================================
+secrets:
+  db_user:
+    file: ./docker/secrets/db_user.txt
+  db_password:
+    file: ./docker/secrets/db_password.txt
+  keycloak_db_user:
+    file: ./docker/secrets/keycloak_db_user.txt
+  keycloak_db_password:
+    file: ./docker/secrets/keycloak_db_password.txt
+  keycloak_admin_password:
+    file: ./docker/secrets/keycloak_admin_password.txt
+  dragonfly_password:
+    file: ./docker/secrets/dragonfly_password.txt
+
+# ============================================
+# Networks
+# ============================================
+networks:
+  sikerma-network:
+    driver: bridge
+
+# ============================================
+# Volumes
+# ============================================
+volumes:
+  sikerma_postgres_data:
+    driver: local
+  keycloak_postgres_data:
+    driver: local
+  dragonfly_data:
+    driver: local
+  # File storage volume untuk dokumen dan file upload
+  # Path: /var/data/sikerma/
+  # Permissions: 750 (owner rwx, group rx, others none)
+  sikerma_file_storage:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ./docker/data/sikerma

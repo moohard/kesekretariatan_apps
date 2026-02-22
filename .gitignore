@@ -1,0 +1,47 @@
+node_modules/
+.pnp
+.pnp.js
+.test
+coverage/
+*.env
+*.env.local
+*.env.development
+*.env.test
+*.env.production
+pnpm-lock.yaml
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.editorconfig
+.idea/
+.vscode/
+*.log
+.next/
+apps/*/dist/
+apps/*/build/
+apps/*/node_modules/
+docker-compose.override.yml
+
+# Docker Secrets - NEVER commit these!
+docker/secrets/*.txt
+!docker/secrets/.gitkeep
+
+# Test artifacts
+.nyc_output/
+*.lcov
+e2e-results/
+playwright-report/
+test-results/
+.auth/
+stryker-report/
+.msw/
+.mutate-cache/
+reports/
+vitest-results/
+
+# Go test artifacts
+*.test
+*.out
+vendor/
+
