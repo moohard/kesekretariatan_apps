@@ -88,7 +88,7 @@ graph TD
     Backend -->|SSE /api/v1/events| Frontend
 
     %% File Storage - Native
-    Backend -->|Read/Write| FileStore[/var/data/sekretariat/<br/>Local Filesystem]
+    Backend -->|Read/Write| FileStore["/var/data/sekretariat/<br/>Local Filesystem"]
 
     %% Monitoring - Native
     subgraph "Monitoring (Native)"
