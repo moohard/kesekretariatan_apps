@@ -18,6 +18,9 @@ export * from "./components/shared/breadcrumb"
 export * from "./components/shared/status-badge"
 export * from "./components/shared/file-upload"
 
+// Form Wizard Components
+export * from "./components/ui/step-wizard"
+
 // Utilities
 export * from "./lib/utils"
 
