@@ -54,7 +54,7 @@ graph TD
     end
 
     %% File Storage - Native
-    Backend -->|Read/Write| FileStore[/var/data/sekretariat/<br/>Local Filesystem]
+    Backend -->|Read/Write| FileStore["/var/data/sekretariat/<br/>Local Filesystem"]
 ```
 
 ### 2.2. Arsitektur Fase Penuh — Dengan Specialist Services
@@ -68,7 +68,7 @@ graph TD
 
     %% Layer 2: Frontend - Native
     subgraph "Native pada Server (Non-Docker)"
-        Nginx -->|Reverse Proxy :3000| Frontend[Frontend: Next.js 16<br/>Dikelola PM2 / aaPanel]
+        Nginx -->|Reverse Proxy :3000| Frontend["Frontend: Next.js 16<br/>Dikelola PM2 / aaPanel"]
     end
 
     %% Layer 3: Backend Services - Docker
