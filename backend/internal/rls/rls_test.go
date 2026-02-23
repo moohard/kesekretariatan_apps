@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/sikerma/backend/internal/testutil"
@@ -291,7 +290,7 @@ func TestRLSPolicySatkerIsolation(t *testing.T) {
 
 	ctx := context.Background()
 
-	satker1ID := suite.Fixture.SatkerIDs[0]
+	_ = suite.Fixture.SatkerIDs[0] // satker1ID reserved for future tests
 	unitInSatker1 := suite.Fixture.UnitIDs[0]
 	userInSatker1 := suite.Fixture.UserIDs[0]
 

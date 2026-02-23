@@ -2,6 +2,14 @@
 -- 02_create_tables_kepegawaian.sql
 -- ============================================
 -- Script untuk membuat tabel di database db_kepegawaian
+--
+-- ARCHITECTURAL NOTE:
+-- PostgreSQL tidak mendukung cross-database foreign keys.
+-- Referential integrity ke db_master ditangani di application level.
+-- Future options:
+--   1. Single database dengan schemas (db_master, db_kepegawaian)
+--   2. postgres_fdw extension
+--   3. Application-level integrity dengan proper validation
 -- ============================================
 
 \c db_kepegawaian;
@@ -38,15 +46,8 @@ CREATE TABLE IF NOT EXISTS pegawai (
     is_pns BOOLEAN DEFAULT true,
     is_active BOOLEAN DEFAULT true,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    -- Foreign keys ke db_master
-    CONSTRAINT fk_pegawai_agama FOREIGN KEY (agama_id) REFERENCES db_master.ref_agama(id),
-    CONSTRAINT fk_pegawai_status_kawin FOREIGN KEY (status_kawin_id) REFERENCES db_master.ref_status_kawin(id),
-    CONSTRAINT fk_pegawai_satker FOREIGN KEY (satker_id) REFERENCES db_master.satker(id),
-    CONSTRAINT fk_pegawai_jabatan FOREIGN KEY (jabatan_id) REFERENCES db_master.jabatan(id),
-    CONSTRAINT fk_pegawai_unit_kerja FOREIGN KEY (unit_kerja_id) REFERENCES db_master.unit_kerja(id),
-    CONSTRAINT fk_pegawai_golongan FOREIGN KEY (golongan_id) REFERENCES db_master.golongan(id)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- NOTE: Cross-database FKs removed - referential integrity handled at application level
 );
 
 -- Index untuk pegawai
@@ -66,7 +67,7 @@ CREATE INDEX idx_pegawai_email ON pegawai(email);
 CREATE TABLE IF NOT EXISTS riwayat_pangkat (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pegawai_id UUID NOT NULL REFERENCES pegawai(id) ON DELETE CASCADE,
-    golongan_id UUID NOT NULL REFERENCES db_master.golongan(id),
+    golongan_id UUID NOT NULL,
     pangkat VARCHAR(100) NOT NULL, -- misal: Pengatur Muda, Penata Tingkat I, dll
     tmt DATE NOT NULL, -- Terhitung Mulai Tanggal
     nomor_sk VARCHAR(100) NOT NULL,
@@ -77,6 +78,7 @@ CREATE TABLE IF NOT EXISTS riwayat_pangkat (
     is_terakhir BOOLEAN DEFAULT false, -- flag untuk pangkat terakhir
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- NOTE: golongan_id references db_master.golongan - integrity at app level
 );
 
 -- Index untuk riwayat_pangkat
@@ -92,9 +94,9 @@ CREATE INDEX idx_riwayat_pangkat_terakhir ON riwayat_pangkat(pegawai_id, is_tera
 CREATE TABLE IF NOT EXISTS riwayat_jabatan (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pegawai_id UUID NOT NULL REFERENCES pegawai(id) ON DELETE CASCADE,
-    jabatan_id UUID REFERENCES db_master.jabatan(id),
-    unit_kerja_id UUID REFERENCES db_master.unit_kerja(id),
-    satker_id UUID REFERENCES db_master.satker(id),
+    jabatan_id UUID,
+    unit_kerja_id UUID,
+    satker_id UUID,
     nama_jabatan VARCHAR(255) NOT NULL, -- nama jabatan aktual
     tmt DATE NOT NULL,
     nomor_sk VARCHAR(100) NOT NULL,
@@ -104,6 +106,7 @@ CREATE TABLE IF NOT EXISTS riwayat_jabatan (
     is_terakhir BOOLEAN DEFAULT false, -- flag untuk jabatan terakhir
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- NOTE: jabatan_id, unit_kerja_id, satker_id reference db_master - integrity at app level
 );
 
 -- Index untuk riwayat_jabatan
@@ -119,7 +122,7 @@ CREATE INDEX idx_riwayat_jabatan_terakhir ON riwayat_jabatan(pegawai_id, is_tera
 CREATE TABLE IF NOT EXISTS riwayat_pendidikan (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pegawai_id UUID NOT NULL REFERENCES pegawai(id) ON DELETE CASCADE,
-    pendidikan_id UUID NOT NULL REFERENCES db_master.ref_pendidikan(id),
+    pendidikan_id UUID NOT NULL,
     nama_institusi VARCHAR(255) NOT NULL,
     jurusan VARCHAR(255),
     tahun_masuk INTEGER,
@@ -129,6 +132,7 @@ CREATE TABLE IF NOT EXISTS riwayat_pendidikan (
     file_ijazah VARCHAR(255),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- NOTE: pendidikan_id references db_master.ref_pendidikan - integrity at app level
 );
 
 -- Index untuk riwayat_pendidikan
@@ -188,7 +192,7 @@ CREATE INDEX idx_template_tipe ON template_dokumen(tipe);
 CREATE TABLE IF NOT EXISTS hukdis (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pegawai_id UUID NOT NULL REFERENCES pegawai(id) ON DELETE CASCADE,
-    jenis_hukdis_id UUID NOT NULL REFERENCES db_master.ref_jenis_hukdis(id),
+    jenis_hukdis_id UUID NOT NULL,
     nomor_sk VARCHAR(100) NOT NULL,
     tanggal_sk DATE NOT NULL,
     tanggal_mulai DATE NOT NULL,
@@ -197,6 +201,7 @@ CREATE TABLE IF NOT EXISTS hukdis (
     pejabat VARCHAR(255) NOT NULL,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- NOTE: jenis_hukdis_id references db_master.ref_jenis_hukdis - integrity at app level
 );
 
 -- Index untuk hukdis
@@ -211,7 +216,7 @@ CREATE INDEX idx_hukdis_tanggal ON hukdis(tanggal_mulai DESC);
 CREATE TABLE IF NOT EXISTS diklat (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     pegawai_id UUID NOT NULL REFERENCES pegawai(id) ON DELETE CASCADE,
-    jenis_diklat_id UUID NOT NULL REFERENCES db_master.ref_jenis_diklat(id),
+    jenis_diklat_id UUID NOT NULL,
     nama_diklat VARCHAR(255) NOT NULL,
     penyelenggara VARCHAR(255),
     tempat VARCHAR(255),
@@ -222,6 +227,7 @@ CREATE TABLE IF NOT EXISTS diklat (
     tanggal_sertifikat DATE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    -- NOTE: jenis_diklat_id references db_master.ref_jenis_diklat - integrity at app level
 );
 
 -- Index untuk diklat

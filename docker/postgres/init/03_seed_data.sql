@@ -2,6 +2,14 @@
 -- 03_seed_data.sql
 -- ============================================
 -- Script untuk seed data awal
+--
+-- ARCHITECTURAL NOTE:
+-- Cross-database queries tidak didukung di PostgreSQL.
+-- Seed data pegawai memerlukan data referensi dari db_master.
+-- Untuk verification, hanya db_master yang di-seed.
+-- Seed data db_kepegawaian perlu dihandle terpisah dengan:
+--   1. postgres_fdw extension, atau
+--   2. Application-level data sync
 -- ============================================
 
 \c db_master;
@@ -185,57 +193,14 @@ INSERT INTO jabatan (kode, nama, eselon_id, kelas) VALUES
 ('STAF', 'Staf', (SELECT id FROM eselon WHERE kode = 'NON-ESELON'), '2B');
 
 -- ============================================
--- SEED DATA PEGAWAI (SAMPLE - BUKAN 29 PEGAWAI ASLI)
+-- SEED DATA db_kepegawaian (SIMPLIFIED)
 -- ============================================
+-- NOTE: Cross-database queries not supported
+-- Only creating minimal template data
 
 \c db_kepegawaian;
 
-INSERT INTO pegawai (nip, nama, gelar_depan, gelar_belakang, tempat_lahir, tanggal_lahir, jenis_kelamin, agama_id, status_kawin_id, nik, email, telepon, alamat, satker_id, jabatan_id, unit_kerja_id, golongan_id, status_pegawai, tmt_jabatan, is_pns) VALUES
-('197601012005011001', 'Ahmad Fauzi', '', 'S.H., M.H.', 'Jakarta', '1976-01-01', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'K2'), '3171234567890001', 'ahmad.fauzi@mahkamahagung.go.id', '081234567890', 'Jl. Sudirman No. 10, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'KETUA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '10'), (SELECT id FROM db_master.golongan WHERE kode = 'IV/c'), 'aktif', '2020-01-01', true),
-('198203022010011002', 'Budi Santoso', '', 'S.H.I.', 'Bandung', '1982-03-02', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'K1'), '3271234567890002', 'budi.santoso@mahkamahagung.go.id', '081234567891', 'Jl. Gatot Subroto No. 20, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'WAKIL-KETUA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '10'), (SELECT id FROM db_master.golongan WHERE kode = 'IV/b'), 'aktif', '2021-01-01', true),
-('198505122012021003', 'Citra Dewi', 'Dra.', 'M.Hum.', 'Surabaya', '1985-05-12', 'P', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3571234567890003', 'citra.dewi@mahkamahagung.go.id', '081234567892', 'Jl. Diponegoro No. 30, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'SEKRETARIS'), (SELECT id FROM db_master.unit_kerja WHERE kode = '05'), (SELECT id FROM db_master.golongan WHERE kode = 'IV/a'), 'aktif', '2022-01-01', true),
-('199010082015032004', 'Dedi Kurniawan', '', 'S.H.', 'Yogyakarta', '1990-10-08', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3471234567890004', 'dedi.kurniawan@mahkamahagung.go.id', '081234567893', 'Jl. Ahmad Yani No. 40, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'KPA-KEPALA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '01'), (SELECT id FROM db_master.golongan WHERE kode = 'III/d'), 'aktif', '2023-01-01', true),
-('199307152017031005', 'Eka Pratama', '', 'S.H.I., M.H.I.', 'Semarang', '1993-07-15', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3371234567890005', 'eka.pratama@mahkamahagung.go.id', '081234567894', 'Jl. Sudirman No. 50, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'KPP-KEPALA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '02'), (SELECT id FROM db_master.golongan WHERE kode = 'III/c'), 'aktif', '2023-01-01', true),
-('199402202018021006', 'Fitriani', 'Dra.', 'M.A.', 'Medan', '1994-02-20', 'P', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'K0'), '3171234567890006', 'fitriani@mahkamahagung.go.id', '081234567895', 'Jl. Rasuna Said No. 60, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'KPN-KEPALA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '03'), (SELECT id FROM db_master.golongan WHERE kode = 'III/c'), 'aktif', '2024-01-01', true),
-('199509252019031007', 'Gunawan', '', 'S.H.I.', 'Makassar', '1995-09-25', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3171234567890007', 'gunawan@mahkamahagung.go.id', '081234567896', 'Jl. Gatot Subroto No. 70, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'KPJ-KEPALA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '04'), (SELECT id FROM db_master.golongan WHERE kode = 'III/c'), 'aktif', '2024-01-01', true),
-('199603102020022008', 'Hendra Wijaya', '', 'S.Kom.', 'Bandar Lampung', '1996-03-10', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3271234567890008', 'hendra.wijaya@mahkamahagung.go.id', '081234567897', 'Jl. Sudirman No. 80, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'SUBBAG-KEPALA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '06'), (SELECT id FROM db_master.golongan WHERE kode = 'III/b'), 'aktif', '2024-01-01', true),
-('199706152021012009', 'Indah Permata', '', 'S.E.', 'Palembang', '1997-06-15', 'P', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3171234567890009', 'indah.permata@mahkamahagung.go.id', '081234567898', 'Jl. Fatmawati No. 90, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'HAKIM'), (SELECT id FROM db_master.unit_kerja WHERE kode = '10'), (SELECT id FROM db_master.golongan WHERE kode = 'III/a'), 'aktif', '2024-01-01', true),
-('199812202022031010', 'Joko Susilo', '', 'S.H.I.', 'Surakarta', '1998-12-20', 'L', (SELECT id FROM db_master.ref_agama WHERE kode = 'ISLAM'), (SELECT id FROM db_master.ref_status_kawin WHERE kode = 'BK'), '3471234567890010', 'joko.susilo@mahkamahagung.go.id', '081234567899', 'Jl. Ahmad Yani No. 100, Jakarta', (SELECT id FROM db_master.satker WHERE kode = 'PA-0001'), (SELECT id FROM db_master.jabatan WHERE kode = 'PANITERA'), (SELECT id FROM db_master.unit_kerja WHERE kode = '01'), (SELECT id FROM db_master.golongan WHERE kode = 'III/a'), 'aktif', '2024-01-01', true);
-
--- ============================================
--- SEED DATA RIWAYAT PANGKAT (SAMPLE)
--- ============================================
-
-INSERT INTO riwayat_pangkat (pegawai_id, golongan_id, pangkat, tmt, nomor_sk, tanggal_sk, pejabat, gaji_pokok, is_terakhir)
-SELECT p.id, g.id, CASE g.angka
-    WHEN 13 THEN 'Pembina'
-    WHEN 14 THEN 'Pembina Tingkat I'
-    WHEN 15 THEN 'Pembina Utama Muda'
-    WHEN 16 THEN 'Pembina Utama Madya'
-    WHEN 17 THEN 'Pembina Utama'
-    WHEN 9 THEN 'Penata Muda'
-    WHEN 10 THEN 'Penata Muda Tingkat I'
-    WHEN 11 THEN 'Penata'
-    WHEN 12 THEN 'Penata Tingkat I'
-    ELSE 'Pegawai'
-END, p.tmt_jabatan, 'SK/' || p.nip || '/2024', '2024-01-01', 'Ketua MA', 4000000, true
-FROM pegawai p
-JOIN db_master.golongan g ON p.golongan_id = g.id;
-
--- ============================================
--- SEED DATA RIWAYAT JABATAN (SAMPLE)
--- ============================================
-
-INSERT INTO riwayat_jabatan (pegawai_id, jabatan_id, unit_kerja_id, satker_id, nama_jabatan, tmt, nomor_sk, tanggal_sk, pejabat, is_terakhir)
-SELECT p.id, p.jabatan_id, p.unit_kerja_id, p.satker_id, j.nama, p.tmt_jabatan, 'SKJ/' || p.nip || '/2024', '2024-01-01', 'Ketua MA', true
-FROM pegawai p
-LEFT JOIN db_master.jabatan j ON p.jabatan_id = j.id
-WHERE p.jabatan_id IS NOT NULL;
-
--- ============================================
--- SEED DATA TEMPLATE DOKUMEN
--- ============================================
-
+-- Template Dokumen (doesn't require cross-db references)
 INSERT INTO template_dokumen (kode, nama, tipe, konten_html) VALUES
 ('SK-PANGKAT', 'Template SK Kenaikan Pangkat', 'sk_pangkat', '<html><body><h1>SURAT KEPUTUSAN</h1><p>Tentang Kenaikan Pangkat</p><p>No: {{nomor_sk}}</p><p>Diberikan kepada: {{nama_pegawai}}</p><p>NIP: {{nip}}</p><p>Golongan: {{golongan}}</p><p>TMT: {{tmt}}</p></body></html>'),
 ('SK-JABATAN', 'Template SK Pengangkatan Jabatan', 'sk_jabatan', '<html><body><h1>SURAT KEPUTUSAN</h1><p>Tentang Pengangkatan Jabatan</p><p>No: {{nomor_sk}}</p><p>Diberikan kepada: {{nama_pegawai}}</p><p>NIP: {{nip}}</p><p>Jabatan: {{jabatan}}</p><p>TMT: {{tmt}}</p></body></html>'),
@@ -245,14 +210,16 @@ INSERT INTO template_dokumen (kode, nama, tipe, konten_html) VALUES
 -- SEED SELESAI
 -- ============================================
 
+\c db_master;
 \echo "Seed data berhasil dibuat!"
-\echo "Total Golongan: " || (SELECT COUNT(*) FROM db_master.golongan)
-\echo "Total Agama: " || (SELECT COUNT(*) FROM db_master.ref_agama)
-\echo "Total Status Kawin: " || (SELECT COUNT(*) FROM db_master.ref_status_kawin)
-\echo "Total App Roles: " || (SELECT COUNT(*) FROM db_master.app_roles)
-\echo "Total App Permissions: " || (SELECT COUNT(*) FROM db_master.app_permissions)
-\echo "Total Satker: " || (SELECT COUNT(*) FROM db_master.satker)
-\echo "Total Jabatan: " || (SELECT COUNT(*) FROM db_master.jabatan)
-\echo "Total Unit Kerja: " || (SELECT COUNT(*) FROM db_master.unit_kerja)
-\echo "Total Pegawai: " || (SELECT COUNT(*) FROM pegawai)
+\echo "Total Golongan: " || (SELECT COUNT(*) FROM golongan)
+\echo "Total Agama: " || (SELECT COUNT(*) FROM ref_agama)
+\echo "Total Status Kawin: " || (SELECT COUNT(*) FROM ref_status_kawin)
+\echo "Total App Roles: " || (SELECT COUNT(*) FROM app_roles)
+\echo "Total App Permissions: " || (SELECT COUNT(*) FROM app_permissions)
+\echo "Total Satker: " || (SELECT COUNT(*) FROM satker)
+\echo "Total Jabatan: " || (SELECT COUNT(*) FROM jabatan)
+\echo "Total Unit Kerja: " || (SELECT COUNT(*) FROM unit_kerja)
+
+\c db_kepegawaian;
 \echo "Total Template Dokumen: " || (SELECT COUNT(*) FROM template_dokumen)

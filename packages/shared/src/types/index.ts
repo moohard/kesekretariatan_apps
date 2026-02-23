@@ -42,9 +42,12 @@ export interface Jabatan {
   nama: string
   eselon_id: UUID | null
   kelas: string | null
+  jenis: "struktural" | "fungsional_tertentu" | "fungsional_umum" | "pelaksana" | null
   is_active: boolean
   created_at: Timestamp
   updated_at: Timestamp
+  // Relations
+  eselon?: Eselon
 }
 
 export interface Golongan {
@@ -58,6 +61,31 @@ export interface Golongan {
   is_active: boolean
   created_at: Timestamp
   updated_at: Timestamp
+}
+
+// Golongan untuk pegawai non-PNS (Honorer, Kontrak, PPPK)
+export interface GolonganNonPNS {
+  id: UUID
+  kode: string
+  nama: string
+  kategori: "Honorer" | "Kontrak"
+  urutan: number
+  keterangan: string | null
+  is_active: boolean
+  created_at: Timestamp
+  updated_at: Timestamp
+}
+
+// Combined view untuk dropdown golongan (PNS + Non-PNS)
+export interface GolonganAll {
+  id: UUID
+  kode: string
+  nama: string
+  ruang: string | null
+  angka: number
+  kategori: "PNS" | "Honorer" | "Kontrak"
+  min_pangkat: number | null
+  max_pangkat: number | null
 }
 
 export interface UnitKerja {
@@ -113,12 +141,19 @@ export interface RefStatusKawin {
 // KEGAWAAN TYPES
 // ============================================
 
+// Status pegawai berdasarkan kategori kepegawaian
+export type StatusPegawai = "PNS" | "CPNS" | "PPPK" | "HONORER"
+
+// Status kerja pegawai
+export type StatusKerja = "aktif" | "cuti" | "pensiun" | "mutasi_keluar" | "mutasi_masuk" | "meninggal" | "pemberhentian"
+
 export interface Pegawai {
   id: UUID
   nip: string
-  nama: string
-  gelar_depan: string
-  gelar_belakang: string
+  nip_lama: string | null  // NIP 9 digit untuk pegawai lama
+  nama_lengkap: string
+  gelar_depan: string | null
+  gelar_belakang: string | null
   tempat_lahir: string
   tanggal_lahir: Timestamp
   jenis_kelamin: "L" | "P"
@@ -128,25 +163,62 @@ export interface Pegawai {
   email: string | null
   telepon: string | null
   alamat: string | null
+  alamat_domisili: string | null  // Alamat domisili (berbeda dengan KTP)
   foto: string | null
   satker_id: UUID
   jabatan_id: UUID | null
   unit_kerja_id: UUID | null
   golongan_id: UUID | null
-  status_pegawai: "aktif" | "pensiun" | "mutasi"
+  eselon_id: UUID | null  // Untuk pegawai struktural
+  status_pegawai: StatusPegawai
+  status_kerja: StatusKerja
+
+  // TMT (Terhitung Mulai Tanggal)
+  tmt_cpns: Timestamp | null
+  tmt_pns: Timestamp | null
   tmt_jabatan: Timestamp | null
-  is_pns: boolean
+  tmt_pangkat_terakhir: Timestamp | null
+  tmt_jabatan_terakhir: Timestamp | null
+
+  // Dokumen kepegawaian
+  karpeg_no: string | null
+  karpeg_file: string | null
+  taspen_no: string | null
+  npwp: string | null
+  bpjs_kesehatan: string | null
+  bpjs_ketenagakerjaan: string | null
+  kk_no: string | null
+  kk_file: string | null
+  ktp_no: string | null
+  ktp_file: string | null
+
+  // Integrasi
+  sikep_id: string | null  // ID di sistem SIKEP MA
+
+  // Audit
   is_active: boolean
   created_at: Timestamp
   updated_at: Timestamp
+  created_by: UUID | null
+  updated_by: UUID | null
+  deleted_at: Timestamp | null
+  deleted_by: UUID | null
+
   // Relations
   satker?: Satker
   jabatan?: Jabatan
   unit_kerja?: UnitKerja
   golongan?: Golongan
+  eselon?: Eselon
   agama?: RefAgama
   status_kawin?: RefStatusKawin
 }
+
+// Jenis kenaikan pangkat
+export type JenisKenaikanPangkat = "reguler" | "pilihan" | "penyesuaian_ijazah" | "lainnya"
+
+// Jenis jabatan
+export type JenisJabatan = "struktural" | "fungsional_tertentu" | "fungsional_umum" | "pelaksana"
 
 export interface RiwayatPangkat {
   id: UUID
@@ -160,8 +232,17 @@ export interface RiwayatPangkat {
   file_sk: string | null
   gaji_pokok: number
   is_terakhir: boolean
+
+  // Field baru
+  jenis_kenaikan: JenisKenaikanPangkat | null
+  masa_kerja_tahun: number
+  masa_kerja_bulan: number
+
   created_at: Timestamp
   updated_at: Timestamp
+  created_by: UUID | null
+
+  // Relations
   golongan?: Golongan
 }
 
@@ -178,8 +259,15 @@ export interface RiwayatJabatan {
   pejabat: string
   file_sk: string | null
   is_terakhir: boolean
+
+  // Field baru
+  jenis_jabatan: JenisJabatan | null
+
   created_at: Timestamp
   updated_at: Timestamp
+  created_by: UUID | null
+
+  // Relations
   jabatan?: Jabatan
   unit_kerja?: UnitKerja
   satker?: Satker
@@ -198,13 +286,18 @@ export interface RiwayatPendidikan {
   file_ijazah: string | null
   created_at: Timestamp
   updated_at: Timestamp
+  created_by: UUID | null
+  // Relations
   pendidikan?: RefPendidikan
 }
+
+// Status hubungan keluarga
+export type StatusKeluarga = "Suami" | "Istri" | "Anak" | "Ayah" | "Ibu"
 
 export interface Keluarga {
   id: UUID
   pegawai_id: UUID
-  status_keluarga: "suami" | "istri" | "anak"
+  hubungan: StatusKeluarga
   nama: string
   tempat_lahir: string | null
   tanggal_lahir: Timestamp | null
@@ -215,6 +308,7 @@ export interface Keluarga {
   is_tanggungan: boolean
   created_at: Timestamp
   updated_at: Timestamp
+  created_by: UUID | null
 }
 
 // ============================================
@@ -321,10 +415,13 @@ export type DropdownOption<T = any> = {
 
 export interface StatistikKepegawaian {
   total_pegawai: number
-  per_status: Record<string, number>
-  pns: number
-  non_pns: number
+  per_status_pegawai: Record<StatusPegawai, number>
+  per_status_kerja: Record<StatusKerja, number>
+  pns: number  // PNS + CPNS
+  non_pns: number  // PPPK + HONORER
   per_golongan: Record<string, number>
+  per_unit_kerja: Record<string, number>
+  per_jenis_jabatan: Record<string, number>
 }
 
 export interface StatistikPerGolongan {
@@ -337,4 +434,36 @@ export interface StatistikPerGolongan {
 export interface StatistikPerJabatan {
   jabatan: string
   total: number
+}
+
+export interface StatistikPerUnitKerja {
+  unit_kerja: string
+  total: number
+}
+
+// Pegawai yang akan mencapai BUP (Batas Usia Pensiun)
+export interface PegawaiAkanPensiun {
+  id: UUID
+  nip: string
+  nama_lengkap: string
+  jabatan: string
+  golongan: string
+  tanggal_lahir: Timestamp
+  usia: number
+  tanggal_pensiun: Timestamp  // Tanggal perkiraan pensiun
+  hari_menuju_pensiun: number
+}
+
+// Dashboard summary untuk Portal
+export interface DashboardSummary {
+  total_pegawai: number
+  pegawai_aktif: number
+  pegawai_pns: number
+  pegawai_cpns: number
+  pegawai_pppk: number
+  pegawai_honorer: number
+  per_unit_kerja: StatistikPerUnitKerja[]
+  per_golongan: StatistikPerGolongan[]
+  aktivitas_terakhir: AuditLog[]
+  akan_pensiun: PegawaiAkanPensiun[]
 }

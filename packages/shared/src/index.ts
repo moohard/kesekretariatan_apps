@@ -153,9 +153,18 @@ export {
   FILE_UPLOAD,
 
   // Domain Constants
-  PEGAWAI_STATUS,
+  STATUS_PEGAWAI,
+  STATUS_KERJA,
+  JENIS_JABATAN,
+  JENIS_KENAIKAN_PANGKAT,
+  KATEGORI_GOLONGAN,
   JENIS_KELAMIN,
   STATUS_KELUARGA,
+
+  // Domain Labels
+  STATUS_PEGAWAI_LABELS,
+  STATUS_KERJA_LABELS,
+  JENIS_JABATAN_LABELS,
 } from "./constants"
 
 // ============================================

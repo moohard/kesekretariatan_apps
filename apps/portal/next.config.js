@@ -20,9 +20,9 @@ const nextConfig = {
     NEXT_PUBLIC_KEYCLOAK_REALM: process.env.NEXT_PUBLIC_KEYCLOAK_REALM || "pengadilan-agama",
     NEXT_PUBLIC_KEYCLOAK_CLIENT_ID: process.env.NEXT_PUBLIC_KEYCLOAK_CLIENT_ID || "portal-client",
   },
-  experimental: {
-    ppr: true,
-  },
+  // PPR (Partial Prerendering) - Next.js 16+
+  // Note: In Next.js 16, experimental.ppr has been merged into cacheComponents
+  // cacheComponents: true, // Enable if PPR is needed
 }
 
 export default nextConfig

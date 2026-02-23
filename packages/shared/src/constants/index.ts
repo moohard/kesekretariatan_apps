@@ -11,6 +11,9 @@ export const API_ENDPOINTS = {
   AUTH_LOGOUT: "/auth/logout",
   AUTH_ME: "/auth/me",
 
+  // Dashboard
+  DASHBOARD_SUMMARY: "/dashboard/summary",
+
   // Master Data
   MASTER_DATA_SATKER: "/master-data/satker",
   MASTER_DATA_SATKER_DROPDOWN: "/master-data/satker/dropdown",
@@ -18,34 +21,50 @@ export const API_ENDPOINTS = {
   MASTER_DATA_JABATAN_DROPDOWN: "/master-data/jabatan/dropdown",
   MASTER_DATA_GOLONGAN: "/master-data/golongan",
   MASTER_DATA_GOLONGAN_DROPDOWN: "/master-data/golongan/dropdown",
+  MASTER_DATA_GOLONGAN_ALL: "/master-data/golongan/all",  // PNS + Non-PNS
+  MASTER_DATA_GOLONGAN_NON_PNS: "/master-data/golongan-non-pns",
+  MASTER_DATA_GOLONGAN_NON_PNS_DROPDOWN: "/master-data/golongan-non-pns/dropdown",
   MASTER_DATA_UNIT_KERJA: "/master-data/unit-kerja",
   MASTER_DATA_UNIT_KERJA_DROPDOWN: "/master-data/unit-kerja/dropdown",
   MASTER_DATA_ESELON: "/master-data/eselon",
   MASTER_DATA_ESELON_DROPDOWN: "/master-data/eselon/dropdown",
+  MASTER_DATA_PENDIDIKAN: "/master-data/pendidikan",
+  MASTER_DATA_PENDIDIKAN_DROPDOWN: "/master-data/pendidikan/dropdown",
+  MASTER_DATA_AGAMA: "/master-data/agama",
+  MASTER_DATA_AGAMA_DROPDOWN: "/master-data/agama/dropdown",
+  MASTER_DATA_STATUS_KAWIN: "/master-data/status-kawin",
+  MASTER_DATA_STATUS_KAWIN_DROPDOWN: "/master-data/status-kawin/dropdown",
 
   // Kepegawaian
   PEGAWAI: "/kepegawaian/pegawai",
-  PEGAWAI_DETAIL: (id: string) => `/kepegawaian/pegawai/${id}`,
-  PEGAWAI_RIWAYAT_PANGKAT: (id: string) => `/kepegawaian/pegawai/${id}/riwayat-pangkat`,
-  PEGAWAI_RIWAYAT_JABATAN: (id: string) => `/kepegawaian/pegawai/${id}/riwayat-jabatan`,
-  PEGAWAI_RIWAYAT_PENDIDIKAN: (id: string) => `/kepegawaian/pegawai/${id}/riwayat-pendidikan`,
-  PEGAWAI_KELUARGA: (id: string) => `/kepegawaian/pegawai/${id}/keluarga`,
-  PEGAWAI_FOTO: (id: string) => `/kepegawaian/pegawai/${id}/upload-foto`,
-  PEGAWAI_SK: (id: string, tipe: string) => `/kepegawaian/pegawai/${id}/upload-sk/${tipe}`,
-  KEPEGAWAIAN_STATISTIK: "/kepegawaian/statistik",
-  KEPEGAWAIAN_STATISTIK_PANGKAT: "/kepegawaian/statistik/pangkat",
-  KEPEGAWAIAN_STATISTIK_JABATAN: "/kepegawaian/statistik/jabatan",
+  PEGAWAI_DETAIL: (nip: string) => `/kepegawaian/pegawai/${nip}`,
+  PEGAWAI_RIWAYAT_PANGKAT: (nip: string) => `/kepegawaian/pegawai/${nip}/pangkat`,
+  PEGAWAI_RIWAYAT_JABATAN: (nip: string) => `/kepegawaian/pegawai/${nip}/jabatan`,
+  PEGAWAI_RIWAYAT_PENDIDIKAN: (nip: string) => `/kepegawaian/pegawai/${nip}/pendidikan`,
+  PEGAWAI_KELUARGA: (nip: string) => `/kepegawaian/pegawai/${nip}/keluarga`,
+  PEGAWAI_FOTO: (nip: string) => `/kepegawaian/pegawai/${nip}/foto`,
+  PEGAWAI_UPLOAD_SK: "/kepegawaian/upload/sk",
+  PEGAWAI_UPLOAD_IJAZAH: "/kepegawaian/upload/ijazah",
+  KEPEGAWAIAN_STATISTIK: "/kepegawaian/pegawai/statistik",
+  KEPEGAWAIAN_AKAN_PENSIUN: "/kepegawaian/pegawai/akan-pensiun",
+
+  // Dokumen / Cetak SK
+  DOKUMEN_TEMPLATES: "/dokumen/templates",
+  DOKUMEN_CETAK: "/dokumen/cetak",
+  DOKUMEN_DOWNLOAD: (id: string) => `/dokumen/download/${id}`,
 
   // RBAC
   RBAC_ROLES: "/rbac/roles",
   RBAC_PERMISSIONS: "/rbac/permissions",
+  RBAC_USER_ROLES: "/rbac/user-roles",
+
+  // Admin
+  ADMIN_USERS: "/admin/users",
+  ADMIN_USER_DETAIL: (id: string) => `/admin/users/${id}`,
+  ADMIN_USER_CLIENT_ACCESS: (id: string) => `/admin/users/${id}/client-access`,
 
   // Audit Logs
   AUDIT_LOGS: "/audit-logs",
-
-  // PDF
-  PDF_GENERATE: "/pdf/generate",
-  PDF_TEMPLATES: "/pdf/templates",
 } as const
 
 // HTTP Status Codes
@@ -90,11 +109,46 @@ export const FILE_UPLOAD = {
   ALLOWED_EXTENSIONS: [".jpg", ".jpeg", ".png", ".pdf"],
 } as const
 
-// Pegawai status
-export const PEGAWAI_STATUS = {
+// Pegawai status kepegawaian (kategori)
+export const STATUS_PEGAWAI = {
+  PNS: "PNS",
+  CPNS: "CPNS",
+  PPPK: "PPPK",
+  HONORER: "HONORER",
+} as const
+
+// Pegawai status kerja
+export const STATUS_KERJA = {
   AKTIF: "aktif",
+  CUTI: "cuti",
   PENSIUN: "pensiun",
-  MUTASI: "mutasi",
+  MUTASI_KELUAR: "mutasi_keluar",
+  MUTASI_MASUK: "mutasi_masuk",
+  MENINGGAL: "meninggal",
+  PEMBERHENTIAN: "pemberhentian",
+} as const
+
+// Jenis jabatan
+export const JENIS_JABATAN = {
+  STRUKTURAL: "struktural",
+  FUNGSIONAL_TERTENTU: "fungsional_tertentu",
+  FUNGSIONAL_UMUM: "fungsional_umum",
+  PELAKSANA: "pelaksana",
+} as const
+
+// Jenis kenaikan pangkat
+export const JENIS_KENAIKAN_PANGKAT = {
+  REGULER: "reguler",
+  PILIHAN: "pilihan",
+  PENYESUAIAN_IJAZAH: "penyesuaian_ijazah",
+  LAINNYA: "lainnya",
+} as const
+
+// Kategori golongan
+export const KATEGORI_GOLONGAN = {
+  PNS: "PNS",
+  HONORER: "Honorer",
+  KONTRAK: "Kontrak",
 } as const
 
 // Jenis kelamin
@@ -103,9 +157,36 @@ export const JENIS_KELAMIN = {
   P: "Perempuan",
 } as const
 
-// Status keluarga
+// Status keluarga (hubungan)
 export const STATUS_KELUARGA = {
-  SUAMI: "suami",
-  ISTRI: "istri",
-  ANAK: "anak",
+  SUAMI: "Suami",
+  ISTRI: "Istri",
+  ANAK: "Anak",
+  AYAH: "Ayah",
+  IBU: "Ibu",
 } as const
+
+// Label untuk display
+export const STATUS_PEGAWAI_LABELS: Record<string, string> = {
+  PNS: "Pegawai Negeri Sipil",
+  CPNS: "Calon Pegawai Negeri Sipil",
+  PPPK: "PPPK",
+  HONORER: "Tenaga Honorer",
+}
+
+export const STATUS_KERJA_LABELS: Record<string, string> = {
+  aktif: "Aktif",
+  cuti: "Cuti",
+  pensiun: "Pensiun",
+  mutasi_keluar: "Mutasi Keluar",
+  mutasi_masuk: "Mutasi Masuk",
+  meninggal: "Meninggal",
+  pemberhentian: "Pemberhentian",
+}
+
+export const JENIS_JABATAN_LABELS: Record<string, string> = {
+  struktural: "Jabatan Struktural",
+  fungsional_tertentu: "Jabatan Fungsional Tertentu",
+  fungsional_umum: "Jabatan Fungsional Umum",
+  pelaksana: "Jabatan Pelaksana",
+}

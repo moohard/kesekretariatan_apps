@@ -35,6 +35,20 @@ CREATE INDEX idx_satker_kode ON satker(kode);
 CREATE INDEX idx_satker_parent ON satker(parent_id);
 CREATE INDEX idx_satker_level ON satker(level);
 
+-- Tabel Eselon (dipindahkan sebelum jabatan karena jabatan references eselon)
+CREATE TABLE IF NOT EXISTS eselon (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    kode VARCHAR(10) UNIQUE NOT NULL,
+    nama VARCHAR(100) NOT NULL,
+    tunjangan DECIMAL(15, 2) DEFAULT 0,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Index untuk eselon
+CREATE INDEX idx_eselon_kode ON eselon(kode);
+
 -- Tabel Jabatan
 CREATE TABLE IF NOT EXISTS jabatan (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -84,20 +98,6 @@ CREATE TABLE IF NOT EXISTS unit_kerja (
 -- Index untuk unit_kerja
 CREATE INDEX idx_unit_kerja_kode ON unit_kerja(kode);
 CREATE INDEX idx_unit_kerja_parent ON unit_kerja(parent_id);
-
--- Tabel Eselon
-CREATE TABLE IF NOT EXISTS eselon (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    kode VARCHAR(10) UNIQUE NOT NULL,
-    nama VARCHAR(100) NOT NULL,
-    tunjangan DECIMAL(15, 2) DEFAULT 0,
-    is_active BOOLEAN DEFAULT true,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
-
--- Index untuk eselon
-CREATE INDEX idx_eselon_kode ON eselon(kode);
 
 -- Tabel Referensi Pendidikan
 CREATE TABLE IF NOT EXISTS ref_pendidikan (
