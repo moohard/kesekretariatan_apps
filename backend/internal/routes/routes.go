@@ -2,7 +2,6 @@ package routes
 
 import (
 	"github.com/gofiber/fiber/v3"
-	"github.com/gofiber/fiber/v3/middleware/limiter"
 
 	"github.com/sikerma/backend/internal/handlers"
 	"github.com/sikerma/backend/internal/middleware"
@@ -21,7 +20,7 @@ func Setup(app *fiber.App, h *handlers.Handlers) {
 	auth.Post("/logout", h.Logout)
 
 	// Authenticated routes
-	authenticated := api.Group("", h.AuthMiddleware().Authenticate())
+	authenticated := api.Group("", h.AuthMiddleware.Authenticate())
 
 	// User profile
 	authenticated.Get("/auth/me", h.GetCurrentUser)
@@ -86,9 +85,4 @@ func Setup(app *fiber.App, h *handlers.Handlers) {
 	audit := authenticated.Group("/audit-logs")
 	audit.Use(middleware.RequirePermission("audit.read"))
 	audit.Get("", h.ListAuditLogs)
-}
-
-// AuthMiddleware getter untuk akses auth middleware dari handlers
-func (h *handlers.Handlers) AuthMiddleware() *middleware.AuthMiddleware {
-	return h.authMiddleware
 }

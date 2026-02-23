@@ -5,10 +5,12 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/extractors"
 	"github.com/gofiber/fiber/v3/middleware/compress"
 	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/gofiber/fiber/v3/middleware/csrf"
@@ -42,14 +44,13 @@ func main() {
 
 	// Create Fiber app
 	app := fiber.New(fiber.Config{
-		AppName:       "SIKERMA Backend API",
-		ServerHeader:  "SIKERMA",
-		EnablePrintRoutes: os.Getenv("LOG_LEVEL") == "debug",
-		ErrorHandler:  customMiddleware.ErrorHandler,
-		BodyLimit:     10 * 1024 * 1024, // 10MB
-		ReadTimeout:   30 * time.Second,
-		WriteTimeout:  30 * time.Second,
-		IdleTimeout:   60 * time.Second,
+		AppName:      "SIKERMA Backend API",
+		ServerHeader: "SIKERMA",
+		ErrorHandler: customMiddleware.ErrorHandler,
+		BodyLimit:    10 * 1024 * 1024, // 10MB
+		ReadTimeout:  30 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  60 * time.Second,
 	})
 
 	// Middleware
@@ -60,32 +61,26 @@ func main() {
 		XSSProtection:      "1; mode=block",
 		ContentTypeNosniff: "nosniff",
 		XFrameOptions:      "SAMEORIGIN",
-		HSTSSeconds:        31536000,
-		HSTSIncludeSubdomains: true,
-		HSTSPreloadEnabled: true,
 		ReferrerPolicy:     "strict-origin-when-cross-origin",
-		PermissionsPolicy:  "geolocation=(), microphone=(), camera=(), payment=(), usb=()",
 	}))
 
 	// CORS
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     cfg.CORS.Origins,
+		AllowOrigins:     strings.Split(cfg.CORS.Origins, ","),
 		AllowCredentials: cfg.CORS.Credentials,
-		AllowMethods:     "GET,POST,PUT,DELETE,PATCH,OPTIONS",
-		AllowHeaders:     "Origin,Content-Type,Accept,Authorization,X-Request-ID,X-CSRF-Token",
-		ExposeHeaders:    "X-Request-ID,X-CSRF-Token",
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization", "X-Request-ID", "X-CSRF-Token"},
+		ExposeHeaders:    []string{"X-Request-ID", "X-CSRF-Token"},
 	}))
 
 	// CSRF Protection
 	app.Use(csrf.New(csrf.Config{
-		KeyLookup:      "header:X-CSRF-Token",
 		CookieName:     "csrf_",
 		CookieSecure:   cfg.Environment == "production",
 		CookieHTTPOnly: true,
 		CookieSameSite: "Strict",
-		Expiration:     1 * time.Hour,
-		KeyGenerator:   customMiddleware.GenerateCSRFToken,
-		ContextKey:     "csrf",
+		CookieSessionOnly: false,
+		Extractor:      extractors.FromHeader("X-CSRF-Token"),
 	}))
 
 	// Global Rate Limiting (100 req/min per IP)

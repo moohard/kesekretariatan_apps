@@ -17,7 +17,7 @@ type Handlers struct {
 	dbMaster      *pgxpool.Pool
 	dbKepegawaian *pgxpool.Pool
 	cfg           *config.Config
-	authMiddleware *middleware.AuthMiddleware
+	AuthMiddleware *middleware.AuthMiddleware
 
 	// Repositories
 	satkerRepo       *repositories.SatkerRepository
@@ -33,13 +33,11 @@ type Handlers struct {
 
 // New membuat instance Handlers baru
 func New(dbMaster, dbKepegawaian *pgxpool.Pool, cfg *config.Config) *Handlers {
-	authMid := middleware.NewAuthMiddleware(cfg.Keycloak.JWKSURL, cfg.Keycloak.Realm)
-
 	return &Handlers{
 		dbMaster:      dbMaster,
 		dbKepegawaian: dbKepegawaian,
 		cfg:           cfg,
-		authMiddleware: authMid,
+		AuthMiddleware: middleware.NewAuthMiddleware(cfg.Keycloak.JWKSURL, cfg.Keycloak.Realm),
 
 		// Initialize repositories
 		satkerRepo:    repositories.NewSatkerRepository(dbMaster),
@@ -424,8 +422,9 @@ func (h *Handlers) ListPegawai(c fiber.Ctx) error {
 	jabatanID := fiber.Query[string](c, "jabatan_id", "")
 	golonganID := fiber.Query[string](c, "golongan_id", "")
 	statusPegawai := fiber.Query[string](c, "status_pegawai", "")
+	statusKerja := fiber.Query[string](c, "status_kerja", "")
 
-	pegawais, total, err := h.pegawaiRepo.List(c.Context(), page, limit, search, satkerID, jabatanID, golonganID, statusPegawai)
+	pegawais, total, err := h.pegawaiRepo.List(c.Context(), page, limit, search, satkerID, jabatanID, golonganID, statusPegawai, statusKerja)
 	if err != nil {
 		return err
 	}
